@@ -8,10 +8,23 @@ BASE_DIR = Path(__file__).resolve().parent
 # Load .env file
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
+def _get_secret(key: str, default: str = "") -> str:
+    """Get a config value from environment, then Streamlit secrets as fallback."""
+    val = os.getenv(key, "").strip()
+    if val:
+        return val
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return str(st.secrets[key]).strip()
+    except Exception:
+        pass
+    return default
+
 class Config:
     # Groq API Configuration
-    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+    GROQ_API_KEY: str = _get_secret("GROQ_API_KEY")
+    GROQ_MODEL: str = _get_secret("GROQ_MODEL", "llama-3.3-70b-versatile")
     
     # Supported Groq Models for fallback/selection
     AVAILABLE_MODELS: list[str] = [
